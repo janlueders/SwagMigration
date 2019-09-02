@@ -215,9 +215,8 @@ class ImageImporter
             }
 
             $uploadFile = $uploadDir . $name . $ext;
-            if (!copy($image, $uploadFile)) {
+            if (!$this->_copyemz($image, $uploadFile)) {
                 $this->logger->error("Copying image from '$image' to '$uploadFile' did not work!");
-
                 return false;
             }
 
@@ -243,5 +242,33 @@ class ImageImporter
         }
 
         return $uploadFile;
+    }
+
+    /**
+     * Copyem from https://www.php.net/manual/de/function.copy.php#93245
+     *
+     * @param String $remoteFile Remotefilepath
+     * @param String $localFile  Localpath
+     *
+     * @return bool
+     */
+    private function _copyemz(String $remoteFile, String $localFile): bool
+    {
+        if (preg_match('https', $remoteFile)) {
+            $opts = stream_context_create(['ssl' => ['verify_peer' => false]]);
+            $contentx = file_get_contents($remoteFile, false, $opts);
+        } else {
+            $contentx = file_get_contents($remoteFile);
+        }
+
+        $openedfile = fopen($localFile, 'w+');
+        fwrite($openedfile, $contentx);
+        fclose($openedfile);
+        if (!$contentx) {
+            $status=false;
+        } else {
+            $status=true;
+        }
+        return $status;
     }
 }
